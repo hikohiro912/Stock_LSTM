@@ -8,6 +8,9 @@ def initialisation():
 	data_getter = getter(csv_filename)
 	[input_data, output_data] = data_getter.get()
 
+	print('input_data.shape:\t'+str(input_data.shape))
+	print('output_data.shape:\t'+str(output_data.shape))
+
 	# Create LSTM
 	network = LSTM()
 

@@ -10,8 +10,13 @@ macd_short_days = 12
 macd_long_days = 26
 macd_signal_days = 9
 rsi_days = 14
-lstm_days = 2
+lstm_days = 7
 
+# Advanced parameters
+input_macd_days = macd_long_days + macd_signal_days - 1
+input_lstm_days = input_macd_days + lstm_days - 1
+
+# Plot settings
 plt.style.use('dark_background')
 
 class getter:
@@ -22,53 +27,48 @@ class getter:
 		# Parse CSV
 		self.parseCSV()
 
-		input_data = [1,2,3]
-		output_data = [4,5,6]
-		return input_data, output_data
+		return self.input_data, self.output_data
 
 	def parseCSV(self):
 		table = pd.read_csv(self.csv_filename)
 		table = table.dropna()
 		print('Finished reading csv using pandas!')
 		
-		self.close_price = np.array(table["Close"])
-		print('close price shape:\t'+str(self.close_price.shape[0]))	
-		
-		# ema_short = self.EMA(self.close_price, ema_short_days)
-		# ema_long = self.EMA(self.close_price, ema_long_days)
-
-		(macd, signal, hist) = self.MACD(self.close_price[:-1], 
-			macd_short_days, macd_long_days, macd_signal_days)
-		print('macd shape:\t'+str(macd.shape[0]))
-
-		input_macd_days = macd_long_days + macd_signal_days - 1
-		input_lstm_days = input_macd_days + lstm_days - 1
-		print('input_macd_days:\t'+str(input_macd_days))
-		print('input_lstm_days:\t'+str(input_lstm_days))
-
-		n_available_input = self.close_price.shape[0] - input_lstm_days 
-		percentage_change_array = np.diff(self.close_price) / np.abs(self.close_price[:-1]) 
-		print(percentage_change_array)
-		output_data = percentage_change_array[-n_available_input:]
-
-		print('output_data:\t' + str(output_data.shape[0]))
-		print('n_available input:\t' + str(n_available_input))
+		# Use close price for the prediction 
+		self.close_price = np.array(table["Close"])		
 
 		# Build Input Data
-		input_data = self.buildInputData(macd, lstm_days)
+		self.input_data = self.buildInputData()
+
+		# Build Output Data
+		self.output_data = self.buildOutputData()	
 
 
+	def buildInputData(self):
+		n_available_input = self.close_price.shape[0] - input_lstm_days 
+		
+		# Get MACD data
+		(macd, signal, hist) = self.MACD(self.close_price[:-1], 
+			macd_short_days, macd_long_days, macd_signal_days)
 
+		# Create input data (ndarray)
+		input_data = []
+		for i in range(n_available_input):	
+			this_input = np.concatenate((macd[i:i+lstm_days], signal[i:i+lstm_days], hist[i:i+lstm_days]), axis=1)	
+			input_data.append(this_input)
+					
+		input_data = np.array(input_data)	
+		
+		return input_data
 
-	def buildInputData(self, input_data, past_days):
-		result = []
-		for i in range(0, input_data.shape[0]-past_days):
-			
-			result = np.append(result, input_data[i:i+past_days], axis=0)
-			
-		print(result.shape)
-		return result
+	def buildOutputData(self):
+		n_available_output = self.close_price.shape[0] - input_lstm_days 
 
+		percentage_change_array = np.diff(self.close_price) / np.abs(self.close_price[:-1]) 		
+		percentage_change_array = percentage_change_array[-n_available_output:]
+		output_data = np.reshape(percentage_change_array, (percentage_change_array.shape[0], 1, 1))
+
+		return output_data
 
 	def RSI(self, in_data, days):
 		diff_data = np.diff(in_data)
@@ -121,7 +121,11 @@ class getter:
 		signal = self.EMA(macd, signal_days)
 		macd = macd[signal_days-1:]
 
-		hist = macd - signal		
+		hist = macd - signal	
+
+		macd = np.reshape(macd, (macd.shape[0], 1))
+		signal = np.reshape(signal, (signal.shape[0],1))
+		hist = np.reshape(hist, (hist.shape[0],1))	
 
 		return macd, signal, hist
 
