@@ -1,9 +1,11 @@
 from LSTM import LSTM
 from getData import getter
 # parameters
-csv_filename = 'data/0066.HK.csv'
+stock_num = '0066'
+csv_filename = 'data/' + stock_num + '.HK.csv'
+model_filename = 'trained_models/testmodel_' + stock_num + '.h5'
 
-def initialisation():
+def getData():
 	# Get data
 	data_getter = getter(csv_filename)
 	[in_train, out_train, in_val, out_val] = data_getter.get()
@@ -13,16 +15,16 @@ def initialisation():
 	print('in_val.shape:\t'+str(in_val.shape))
 	print('out_val.shape:\t'+str(out_val.shape))
 
-	# Create LSTM
-	network = LSTM()
+	return in_train, out_train, in_val, out_val
 
-	return in_train, out_train, in_val, out_val, network
-
-def trainLSTMfromRSI(in_train, out_train, in_val, out_val, network):
-	print('nothing trained!')	
+def trainLSTM(in_train, out_train, in_val, out_val):
+	# Create LSTM model
+	model = LSTM.buildModel(in_train.shape)
+	model = LSTM.train(in_train, out_train, in_val, out_val, model)
+	LSTM.saveModel(model, model_filename)
 
 
 if __name__== "__main__":
-	[in_train, out_train, in_val, out_val, network] = initialisation()
+	[in_train, out_train, in_val, out_val] = getData()
 	
-	trainLSTMfromRSI(in_train, out_train, in_val, out_val, network)
+	trainLSTM(in_train, out_train, in_val, out_val)

@@ -12,7 +12,7 @@ macd_signal_days = 9
 rsi_days = 14
 lstm_days = 7
 
-validation_rate = 0.2
+validation_rate = 0.3
 
 # Advanced parameters
 input_macd_days = macd_long_days + macd_signal_days - 1
@@ -61,6 +61,17 @@ class getter:
 		(macd, signal, hist) = self.MACD(self.close_price[:-1], 
 			macd_short_days, macd_long_days, macd_signal_days)
 
+		macd = macd/10
+		signal = signal/10
+		# hist = hist*10
+
+		abs_macd_mean = np.mean(np.absolute(macd))
+		print("macd absolute mean:\t" + str(abs_macd_mean))
+		abs_signal_mean = np.mean(np.absolute(signal))
+		print("signal absolute mean:\t" + str(abs_signal_mean))
+		abs_hist_mean = np.mean(np.absolute(hist))
+		print("hist absolute mean:\t" + str(abs_hist_mean))
+
 		# Create input data (ndarray)
 		input_data = []
 		for i in range(n_available_input):	
@@ -76,7 +87,14 @@ class getter:
 
 		percentage_change_array = np.diff(self.close_price) / np.abs(self.close_price[:-1]) 		
 		percentage_change_array = percentage_change_array[-n_available_output:]
-		output_data = np.reshape(percentage_change_array, (percentage_change_array.shape[0], 1, 1))
+
+		# percentage_change_array = percentage_change_array*10
+
+		output_data = np.reshape(percentage_change_array, (percentage_change_array.shape[0], 1))
+
+		print(percentage_change_array)
+		abs_mean = np.mean(np.absolute(percentage_change_array))
+		print("Output absolute mean:\t" + str(abs_mean))
 
 		return output_data
 
