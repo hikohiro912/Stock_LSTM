@@ -1,9 +1,7 @@
 from LSTM import LSTM
 from getData import getter
 # parameters
-csv_filename = 'data/0005.HK.csv'
-
-
+csv_filename = 'data/0066.HK.csv'
 
 def initialisation():
 	# Get data
