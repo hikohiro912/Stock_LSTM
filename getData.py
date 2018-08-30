@@ -12,6 +12,8 @@ macd_signal_days = 9
 rsi_days = 14
 lstm_days = 7
 
+validation_rate = 0.2
+
 # Advanced parameters
 input_macd_days = macd_long_days + macd_signal_days - 1
 input_lstm_days = input_macd_days + lstm_days - 1
@@ -27,7 +29,7 @@ class getter:
 		# Parse CSV
 		self.parseCSV()
 
-		return self.input_data, self.output_data
+		return self.in_train, self.out_train, self.in_val, self.out_val
 
 	def parseCSV(self):
 		table = pd.read_csv(self.csv_filename)
@@ -42,6 +44,14 @@ class getter:
 
 		# Build Output Data
 		self.output_data = self.buildOutputData()	
+
+		# Shuffle data
+		[self.input_data_random, self.output_data_random] = self.shuffleData(self.input_data, 
+			self.output_data)
+
+		# Split data into train and validation 
+		[self.in_train, self.out_train, self.in_val, self.out_val] = self.splitData(self.input_data_random, 
+			self.output_data_random, validation_rate)
 
 
 	def buildInputData(self):
@@ -69,6 +79,21 @@ class getter:
 		output_data = np.reshape(percentage_change_array, (percentage_change_array.shape[0], 1, 1))
 
 		return output_data
+
+	def shuffleData(self, x, y):
+		np.random.seed(None)
+		randomList = np.arange(x.shape[0])
+		np.random.shuffle(randomList)
+		return x[randomList], y[randomList]		
+
+	def splitData(self, x, y, rate):
+		x_train = x[int(x.shape[0]*rate):]
+		y_train = y[int(x.shape[0]*rate):]
+		x_val = x[:int(x.shape[0]*rate)]
+		y_val = y[:int(y.shape[0]*rate)]
+
+		return x_train, y_train, x_val, y_val
+
 
 	def RSI(self, in_data, days):
 		diff_data = np.diff(in_data)

@@ -6,21 +6,23 @@ csv_filename = 'data/0066.HK.csv'
 def initialisation():
 	# Get data
 	data_getter = getter(csv_filename)
-	[input_data, output_data] = data_getter.get()
+	[in_train, out_train, in_val, out_val] = data_getter.get()
 
-	print('input_data.shape:\t'+str(input_data.shape))
-	print('output_data.shape:\t'+str(output_data.shape))
+	print('in_train.shape:\t'+str(in_train.shape))
+	print('out_train.shape:\t'+str(out_train.shape))
+	print('in_val.shape:\t'+str(in_val.shape))
+	print('out_val.shape:\t'+str(out_val.shape))
 
 	# Create LSTM
 	network = LSTM()
 
-	return input_data, output_data, network
+	return in_train, out_train, in_val, out_val, network
 
-def trainLSTMfromRSI(input_data, output_data, network):
+def trainLSTMfromRSI(in_train, out_train, in_val, out_val, network):
 	print('nothing trained!')	
 
 
 if __name__== "__main__":
-	[input_data, output_data, network] = initialisation()
+	[in_train, out_train, in_val, out_val, network] = initialisation()
 	
-	trainLSTMfromRSI(input_data, output_data, network)
+	trainLSTMfromRSI(in_train, out_train, in_val, out_val, network)
