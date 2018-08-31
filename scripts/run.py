@@ -1,7 +1,7 @@
 from LSTM import LSTM
 from getData import getter
 # parameters
-stock_num = '0066'
+stock_num = '0005'
 csv_filename = '../data/' + stock_num + '.HK.csv'
 model_filename = '../trained_models/testmodel_' + stock_num + '.h5'
 

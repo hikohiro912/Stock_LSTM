@@ -24,12 +24,36 @@ plt.style.use('dark_background')
 class getter:
 	def __init__(self, csv_filename):			
  		self.csv_filename = csv_filename
+ 		self.parse_flag = False
  		print('Ready to get some data from ' + csv_filename + '!!!')
+	
 	def get(self):
-		# Parse CSV
-		self.parseCSV()
+		if not self.parse_flag:
+			# Parse CSV
+			self.parseCSV()
+			self.parse_flag = True
 
 		return self.in_train, self.out_train, self.in_val, self.out_val
+
+	def getFirstInput(self):
+		if not self.parse_flag:
+			# Parse CSV
+			self.parseCSV()
+			self.parse_flag = True
+
+		first_input = self.input_data[:10]
+		# return np.reshape(first_input, (1, first_input.shape[0], first_input.shape[1]))
+		return first_input
+
+	def getFirstOutput(self):
+		if not self.parse_flag:
+			# Parse CSV
+			self.parseCSV()
+			self.parse_flag = True
+
+		first_output = self.output_data[:10]
+		# return np.reshape(first_output, (1, first_output.shape[0]))
+		return first_output
 
 	def parseCSV(self):
 		table = pd.read_csv(self.csv_filename)
@@ -53,7 +77,6 @@ class getter:
 		[self.in_train, self.out_train, self.in_val, self.out_val] = self.splitData(self.input_data_random, 
 			self.output_data_random, validation_rate)
 
-
 	def buildInputData(self):
 		n_available_input = self.close_price.shape[0] - input_lstm_days 
 		
@@ -61,9 +84,9 @@ class getter:
 		(macd, signal, hist) = self.MACD(self.close_price[:-1], 
 			macd_short_days, macd_long_days, macd_signal_days)
 
-		macd = macd/10
-		signal = signal/10
-		# hist = hist*10
+		macd = macd*10
+		signal = signal*10
+		hist = hist*10
 
 		abs_macd_mean = np.mean(np.absolute(macd))
 		print("macd absolute mean:\t" + str(abs_macd_mean))
@@ -75,7 +98,9 @@ class getter:
 		# Create input data (ndarray)
 		input_data = []
 		for i in range(n_available_input):	
-			this_input = np.concatenate((macd[i:i+lstm_days], signal[i:i+lstm_days], hist[i:i+lstm_days]), axis=1)	
+			this_input = np.concatenate((macd[i:i+lstm_days], signal[i:i+lstm_days]), axis=1)	
+			# this_input = np.concatenate((macd[i:i+lstm_days], signal[i:i+lstm_days], hist[i:i+lstm_days]), axis=1)	
+			# this_input = hist[i:i+lstm_days]
 			input_data.append(this_input)
 					
 		input_data = np.array(input_data)	
@@ -88,11 +113,18 @@ class getter:
 		percentage_change_array = np.diff(self.close_price) / np.abs(self.close_price[:-1]) 		
 		percentage_change_array = percentage_change_array[-n_available_output:]
 
-		# percentage_change_array = percentage_change_array*10
+		o_array = []
+		for o in percentage_change_array:
+			if o != 0:
+				o_array.append(o/abs(o))
+			else:
+				o_array.append(0)
+		o_array = np.array(o_array)
+		
 
-		output_data = np.reshape(percentage_change_array, (percentage_change_array.shape[0], 1))
+		output_data = np.reshape(o_array, (o_array.shape[0], 1))
+		print(output_data)
 
-		print(percentage_change_array)
 		abs_mean = np.mean(np.absolute(percentage_change_array))
 		print("Output absolute mean:\t" + str(abs_mean))
 

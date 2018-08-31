@@ -3,15 +3,18 @@ from keras.layers import Dense, Dropout, Activation, Flatten, TimeDistributed, R
 from keras.layers import LSTM as lstm
 from keras.optimizers import Adam
 from keras.callbacks import EarlyStopping
+from keras.models import load_model
+from keras import regularizers
 import pickle
 
 class LSTM:
 	def buildModel(shape):
 		print(shape)
 		model = Sequential()
-		model.add(lstm(16, input_shape=(shape[1], shape[2]), return_sequences=False))	
-		model.add(Dropout(0.5))			
-		model.add(Dense(1))
+		model.add(lstm(32, input_shape=(shape[1], shape[2]), return_sequences=False))			
+		model.add(Dropout(0.1))			
+		model.add(Dense(1))		
+		model.add(Activation('tanh'))
 		model.compile(loss="mse", optimizer="adam")
 		model.summary()
 		return model
