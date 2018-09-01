@@ -1,9 +1,11 @@
 from LSTM import LSTM
 from getData import getter
+import time
 # parameters
 stock_num = '0005'
 csv_filename = '../data/' + stock_num + '.HK.csv'
 model_filename = '../trained_models/testmodel_' + stock_num + '.h5'
+model_name = '{}-stock_model-{}'.format(stock_num, int(time.time()))
 
 def getData():
 	# Get data
@@ -19,8 +21,9 @@ def getData():
 
 def trainLSTM(in_train, out_train, in_val, out_val):
 	# Create LSTM model
-	model = LSTM.buildModel(in_train.shape)
-	model = LSTM.train(in_train, out_train, in_val, out_val, model)
+	model = LSTM.buildModel(in_train.shape, lstm_layers=1, lstm_units=8, 
+		dense_layers=0, dense_units=8)
+	model = LSTM.train(in_train, out_train, in_val, out_val, model, model_name)
 	LSTM.saveModel(model, model_filename)
 
 

@@ -10,7 +10,7 @@ macd_short_days = 12
 macd_long_days = 26
 macd_signal_days = 9
 rsi_days = 14
-lstm_days = 7
+lstm_days = 30
 
 validation_rate = 0.3
 
@@ -84,9 +84,9 @@ class getter:
 		(macd, signal, hist) = self.MACD(self.close_price[:-1], 
 			macd_short_days, macd_long_days, macd_signal_days)
 
-		macd = macd*10
-		signal = signal*10
-		hist = hist*10
+		# macd = macd*10
+		# signal = signal*10
+		# hist = hist*10
 
 		abs_macd_mean = np.mean(np.absolute(macd))
 		print("macd absolute mean:\t" + str(abs_macd_mean))
@@ -98,9 +98,9 @@ class getter:
 		# Create input data (ndarray)
 		input_data = []
 		for i in range(n_available_input):	
-			this_input = np.concatenate((macd[i:i+lstm_days], signal[i:i+lstm_days]), axis=1)	
+			# this_input = np.concatenate((macd[i:i+lstm_days], signal[i:i+lstm_days]), axis=1)	
 			# this_input = np.concatenate((macd[i:i+lstm_days], signal[i:i+lstm_days], hist[i:i+lstm_days]), axis=1)	
-			# this_input = hist[i:i+lstm_days]
+			this_input = hist[i:i+lstm_days]
 			input_data.append(this_input)
 					
 		input_data = np.array(input_data)	
@@ -120,10 +120,13 @@ class getter:
 			else:
 				o_array.append(0)
 		o_array = np.array(o_array)
-		
 
 		output_data = np.reshape(o_array, (o_array.shape[0], 1))
 		print(output_data)
+		
+
+		# output_data = np.reshape(percentage_change_array, (percentage_change_array.shape[0], 1))
+		# print(output_data)
 
 		abs_mean = np.mean(np.absolute(percentage_change_array))
 		print("Output absolute mean:\t" + str(abs_mean))
