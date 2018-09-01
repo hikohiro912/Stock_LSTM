@@ -24,21 +24,23 @@ class LSTM:
 				this_return = True
 
 			model.add(lstm(lstm_units, input_shape=this_shape, return_sequences=this_return))				
-		
+			model.add(Activation('relu'))
+
 		# Dense layers
 		for l in range(dense_layers):				
 			model.add(Dense(dense_units))
-			model.add(Dropout(0.3))	
+			model.add(Activation('relu'))
+			model.add(Dropout(0.1))	
 		
 		model.add(Dense(1))				
-		model.compile(loss="mse", optimizer="adam", metrics=['acc'])
+		model.compile(loss="mse", optimizer="adam", metrics=['mae'])
 		model.summary()
 		return model
 
 	def train(x_train, y_train, x_val, y_val, model, model_name):
 		callback_earlystop = EarlyStopping(monitor="loss", patience=10, verbose=1, mode="auto")
 		callback_tensorboard = TensorBoard(log_dir='../logs/{}'.format(model_name))
-		model.fit(x_train, y_train, epochs=20, batch_size=128, 
+		model.fit(x_train, y_train, epochs=40, batch_size=128, 
 			validation_data=(x_val, y_val), callbacks=[callback_tensorboard])
 		return model
 

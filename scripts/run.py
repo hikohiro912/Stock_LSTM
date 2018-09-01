@@ -5,7 +5,14 @@ import time
 stock_num = '0005'
 csv_filename = '../data/' + stock_num + '.HK.csv'
 model_filename = '../trained_models/testmodel_' + stock_num + '.h5'
-model_name = '{}-stock_model-{}'.format(stock_num, int(time.time()))
+
+# model settings
+lstm_l = 1
+lstm_u = 8
+dense_l = 1
+dense_u = 32
+model_name = '{}-LSTM-{},{}-Dense{},{}-{}'.format(stock_num, lstm_l, lstm_u,
+	dense_l, dense_u, int(time.time()))
 
 def getData():
 	# Get data
@@ -21,8 +28,8 @@ def getData():
 
 def trainLSTM(in_train, out_train, in_val, out_val):
 	# Create LSTM model
-	model = LSTM.buildModel(in_train.shape, lstm_layers=1, lstm_units=8, 
-		dense_layers=0, dense_units=8)
+	model = LSTM.buildModel(in_train.shape, lstm_layers=lstm_l, lstm_units=lstm_u, 
+		dense_layers=dense_l, dense_units=dense_u)
 	model = LSTM.train(in_train, out_train, in_val, out_val, model, model_name)
 	LSTM.saveModel(model, model_filename)
 

@@ -10,7 +10,7 @@ macd_short_days = 12
 macd_long_days = 26
 macd_signal_days = 9
 rsi_days = 14
-lstm_days = 30
+lstm_days = 7
 
 validation_rate = 0.3
 
@@ -79,14 +79,23 @@ class getter:
 
 	def buildInputData(self):
 		n_available_input = self.close_price.shape[0] - input_lstm_days 
+		print('n_in:\t'+str(n_available_input))
 		
 		# Get MACD data
 		(macd, signal, hist) = self.MACD(self.close_price[:-1], 
 			macd_short_days, macd_long_days, macd_signal_days)
+		print('macd.shape:\t' + str(macd.shape))
 
-		# macd = macd*10
-		# signal = signal*10
-		# hist = hist*10
+		# Get RSI data
+		rsi = self.RSI(self.close_price[:-1], rsi_days)
+		rsi = rsi[-n_available_input-lstm_days+1:]/100		
+		print('rsi.shape:\t' + str(rsi.shape))
+		print(rsi[-7:])
+
+		macd = macd*10
+		signal = signal*10
+		hist = hist*10
+		rsi = rsi*10
 
 		abs_macd_mean = np.mean(np.absolute(macd))
 		print("macd absolute mean:\t" + str(abs_macd_mean))
@@ -94,13 +103,17 @@ class getter:
 		print("signal absolute mean:\t" + str(abs_signal_mean))
 		abs_hist_mean = np.mean(np.absolute(hist))
 		print("hist absolute mean:\t" + str(abs_hist_mean))
+		abs_rsi_mean = np.mean(np.absolute(rsi))
+		print("rsi absolute mean:\t" + str(abs_rsi_mean))
 
 		# Create input data (ndarray)
 		input_data = []
 		for i in range(n_available_input):	
 			# this_input = np.concatenate((macd[i:i+lstm_days], signal[i:i+lstm_days]), axis=1)	
-			# this_input = np.concatenate((macd[i:i+lstm_days], signal[i:i+lstm_days], hist[i:i+lstm_days]), axis=1)	
-			this_input = hist[i:i+lstm_days]
+			
+			this_input = np.concatenate((macd[i:i+lstm_days], signal[i:i+lstm_days], hist[i:i+lstm_days], rsi[i:i+lstm_days]), axis=1)	
+			
+			# this_input = hist[i:i+lstm_days]
 			input_data.append(this_input)
 					
 		input_data = np.array(input_data)	
@@ -111,22 +124,23 @@ class getter:
 		n_available_output = self.close_price.shape[0] - input_lstm_days 
 
 		percentage_change_array = np.diff(self.close_price) / np.abs(self.close_price[:-1]) 		
-		percentage_change_array = percentage_change_array[-n_available_output:]
+		percentage_change_array = percentage_change_array[-n_available_output:]*1000
 
-		o_array = []
-		for o in percentage_change_array:
-			if o != 0:
-				o_array.append(o/abs(o))
-			else:
-				o_array.append(0)
-		o_array = np.array(o_array)
+		# o_array = []
+		# for o in percentage_change_array:
+		# 	if o != 0:
+		# 		o_array.append(o/abs(o))
+		# 	else:
+		# 		o_array.append(0)
+		# o_array = np.array(o_array)
 
-		output_data = np.reshape(o_array, (o_array.shape[0], 1))
-		print(output_data)
-		
-
-		# output_data = np.reshape(percentage_change_array, (percentage_change_array.shape[0], 1))
+		# output_data = np.reshape(o_array, (o_array.shape[0], 1))
 		# print(output_data)
+
+
+
+		output_data = np.reshape(percentage_change_array, (percentage_change_array.shape[0], 1))
+		print(output_data)
 
 		abs_mean = np.mean(np.absolute(percentage_change_array))
 		print("Output absolute mean:\t" + str(abs_mean))
@@ -150,7 +164,7 @@ class getter:
 
 	def RSI(self, in_data, days):
 		diff_data = np.diff(in_data)
-		print('diff_data shape' + str(diff_data.shape))
+
 		# First average gain
 		avg_gain = np.sum(np.extract(diff_data[0:days-1]>0, diff_data[0:days-1])) / days
 		avg_loss = -np.sum(np.extract(diff_data[0:days-1]<0, diff_data[0:days-1])) / days
@@ -165,6 +179,7 @@ class getter:
 			this_RSI = 100 - 100 / (1 + this_RS)
 			out_data = np.append(out_data, this_RSI)
 		
+		out_data = np.reshape(out_data, (out_data.shape[0], 1))
 		return out_data
 
 	def SMA(self, in_data, days):
