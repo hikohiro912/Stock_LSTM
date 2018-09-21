@@ -1,2 +1,4 @@
 *.pyc
 *.TOM
+logs\
+*.h5
